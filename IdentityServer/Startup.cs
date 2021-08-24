@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -12,11 +11,13 @@ namespace IdentityServer
         {
             services.AddIdentityServer()
                 .AddInMemoryClients(Config.Clients)
-                //.AddInMemoryIdentityResources(Config.IdentityResources)
+                .AddInMemoryIdentityResources(Config.IdentityResources)
                 //.AddInMemoryApiResources(Config.ApiResources)
                 .AddInMemoryApiScopes(Config.ApiScopes)
-                //.AddTestUsers(Config.TestUsers)
+                .AddTestUsers(Config.TestUsers)
                 .AddDeveloperSigningCredential();
+
+            services.AddControllersWithViews();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -26,11 +27,16 @@ namespace IdentityServer
                 app.UseDeveloperExceptionPage();
             }
 
+            // For server static files such as JavaScript, HTML etc.
+            app.UseStaticFiles();
+
             app.UseRouting();
 
             app.UseIdentityServer();
 
-            app.UseEndpoints(endpoints => endpoints.MapGet("/", async context => await context.Response.WriteAsync("Hello World!")));
+            app.UseAuthorization();
+
+            app.UseEndpoints(endpoints => endpoints.MapDefaultControllerRoute());
         }
     }
 }
