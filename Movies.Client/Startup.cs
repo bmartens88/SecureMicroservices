@@ -1,11 +1,14 @@
-﻿using Microsoft.AspNetCore.Authentication.Cookies;
+﻿using IdentityModel.Client;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Net.Http.Headers;
 using Movies.Client.ApiServices;
+using Movies.Client.HttpHandlers;
 
 namespace Movies.Client
 {
@@ -43,9 +46,31 @@ namespace Movies.Client
                     options.GetClaimsFromUserInfoEndpoint = true;
                 });
 
-            services.AddControllersWithViews();
+            services.AddTransient<AuthenticationDelegatingHandler>();
 
-            services.AddHttpClient();
+            services.AddHttpClient("MovieAPIClient", client =>
+            {
+                client.BaseAddress = new("https://localhost:5001/");
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Add(HeaderNames.Accept, "application/json");
+            }).AddHttpMessageHandler<AuthenticationDelegatingHandler>();
+
+            services.AddHttpClient("IDPClient", client =>
+            {
+                client.BaseAddress = new("https://localhost:5005/");
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Add(HeaderNames.Accept, "application/json");
+            });
+
+            services.AddSingleton(new ClientCredentialsTokenRequest
+            {
+                Address = "https://localhost:5005/connect/token",
+                ClientId = "movieClient",
+                ClientSecret = "secret",
+                Scope = "movieAPI"
+            });
+
+            services.AddControllersWithViews();
 
             services.AddScoped<IMovieApiService, MovieApiService>();
         }

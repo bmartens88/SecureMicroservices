@@ -1,4 +1,5 @@
 ﻿using Movies.Client.Models;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
@@ -8,27 +9,70 @@ namespace Movies.Client.ApiServices
 {
     public class MovieApiService : IMovieApiService
     {
+        private readonly IHttpClientFactory _httpClientFactory;
+
         public MovieApiService(IHttpClientFactory httpClientFactory)
         {
-
+            _httpClientFactory = httpClientFactory;
         }
 
         public async Task<IEnumerable<Movie>> GetMovies()
         {
-            var movieList = new List<Movie> {
-                new()
-                {
-                    Id = 1,
-                    Genre = "Comics",
-                    Title = "asd",
-                    Rating = "9.2",
-                    ImageUrl = "images/src",
-                    ReleaseDate = DateTime.Now,
-                    Owner = "swn"
-                }
-            };
+            // WAY 1
+            var httpClient = _httpClientFactory.CreateClient("MovieAPIClient");
 
-            return await Task.FromResult(movieList);
+            var request = new HttpRequestMessage(HttpMethod.Get, "/api/movies/");
+
+            var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
+
+            var content = await response.Content.ReadAsStringAsync();
+            var movieList = JsonConvert.DeserializeObject<List<Movie>>(content);
+            return movieList;
+
+            // WAY 2
+
+            //// 1 - Get Token from Identity Server
+            //var apiClientCredentials = new ClientCredentialsTokenRequest
+            //{
+            //    Address = "https://localhost:5005/connect/token",
+
+            //    ClientId = "movieClient",
+            //    ClientSecret = "secret",
+
+            //    Scope = "movieAPI"
+            //};
+
+            //// Create a new HttpClient to talk to our Identity Server
+            //var client = new HttpClient();
+
+            //// Just check if we can reach the Discovery Document.
+            //var disco = await client.GetDiscoveryDocumentAsync("https://localhost:5005");
+            //if (disco.IsError)
+            //{
+            //    return null;
+            //}
+
+            //// Authenticates and get an access token from IS
+            //var tokenResponse = await client.RequestClientCredentialsTokenAsync(apiClientCredentials);
+            //if (tokenResponse.IsError)
+            //{
+            //    return null;
+            //}
+
+            //// 2 - Send request to Protected API
+            //// Another HttpClient for talking now with our protected API
+            //var apiClient = new HttpClient();
+
+            //apiClient.SetBearerToken(tokenResponse.AccessToken);
+
+            //var response = await apiClient.GetAsync("https://localhost:5001/api/movies");
+            //response.EnsureSuccessStatusCode();
+
+            //var content = await response.Content.ReadAsStringAsync();
+
+            //// 3 - Deserialize Object to Movie List
+            //var movieList = JsonConvert.DeserializeObject<List<Movie>>(content);
+            //return movieList;
         }
 
         public Task<Movie> CreateMovie(Movie movie)
