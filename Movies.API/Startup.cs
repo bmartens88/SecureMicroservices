@@ -34,7 +34,7 @@ namespace Movies.API
                 });
 
             // Add Claim-based authorization
-            services.AddAuthorization(options => options.AddPolicy("ClientPolicy", policy => policy.RequireClaim("client_id", "movieClient")));
+            services.AddAuthorization(options => options.AddPolicy("ClientPolicy", policy => policy.RequireClaim("client_id", "movies_mvc_client", "movieClient")));
 
             services.AddControllers();
             services.AddSwaggerGen(c => c.SwaggerDoc("v1", new OpenApiInfo { Title = "Movies.API", Version = "v1" }));

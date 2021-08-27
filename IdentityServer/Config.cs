@@ -24,7 +24,8 @@ namespace IdentityServer
                 {
                     ClientId = "movies_mvc_client",
                     ClientName = "Movies MVC Web App",
-                    AllowedGrantTypes = GrantTypes.Code,
+                    AllowedGrantTypes = GrantTypes.Hybrid,
+                    RequirePkce = false,
                     AllowRememberConsent = false,
                     RedirectUris = new List<string>
                     {
@@ -41,7 +42,11 @@ namespace IdentityServer
                     AllowedScopes = new List<string>
                     {
                         IdentityServerConstants.StandardScopes.OpenId,
-                        IdentityServerConstants.StandardScopes.Profile
+                        IdentityServerConstants.StandardScopes.Profile,
+                        IdentityServerConstants.StandardScopes.Email,
+                        IdentityServerConstants.StandardScopes.Address,
+                        "movieAPI",
+                        "roles"
                     }
                 }
             };
@@ -57,7 +62,10 @@ namespace IdentityServer
         public static IEnumerable<IdentityResource> IdentityResources =>
             new IdentityResource[] {
                 new IdentityResources.OpenId(),
-                new IdentityResources.Profile()
+                new IdentityResources.Profile(),
+                new IdentityResources.Email(),
+                new IdentityResources.Address(),
+                new("roles", "Your role(s)", new List<string>{ "role" })
             };
 
         public static List<TestUser> TestUsers =>
